@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IndustrCons Knowledge — Tikinti Bilik Bazası</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">INDUSTRCONS</div>
+        <div class="brand-sub">KNOWLEDGE MODULE</div>
+      </div>
+    </div>
+    <span class="badge">● OFFLINE / LOCAL DATA</span>
+  </header>
+
+  <h1 class="hero">Tikinti Bilik Bazası &amp; Köməkçi</h1>
+  <p class="lead">57 mövzu, 15 kateqoriya, 45 termin — beton, armatur, boya, izolyasiya, fasad, fit-out, profillər, sənaye materialları, suvaq, ağac, şüşə, dam örtüyü, santexnika, elektrik və döşəmə örtükləri üzrə. İnternet lazım deyil — bütün məlumat bu qovluğun daxilindədir.</p>
+
+  <div class="panel assistant">
+    <div class="assistant-head">
+      <span class="dot"></span>
+      <span>KÖMƏKÇI · AÇAR-SÖZ ƏSASLI · CANLI İNTERNET TƏLƏB ETMİR</span>
+    </div>
+    <p class="assistant-title">Nə bilmək istəyirsiniz?</p>
+    <div class="search-row">
+      <input id="askInput" type="text" placeholder="məs: armatur necə bağlanır, kabel en kəsiyi..." />
+      <button class="go" id="goBtn">Soruş</button>
+    </div>
+    <div class="chips" id="chipRow"></div>
+    <div id="answerBox"></div>
+  </div>
+
+  <div class="section-title"><h2>Kateqoriyalar</h2><span class="count" id="catCount"></span></div>
+  <div class="cat-grid" id="catGrid"></div>
+
+  <div class="section-title"><h2 id="listTitle">Bütün mövzular</h2><span class="count" id="entryCount"></span></div>
+  <div class="searchbar-inline">
+    <input id="entrySearch" type="text" placeholder="Siyahı daxilində axtar…" />
+  </div>
+  <div class="entry-list" id="entryList"></div>
+
+  <div class="section-title"><h2>Tikinti Lüğəti</h2><span class="count" id="dictCount"></span></div>
+  <div class="dict-grid" id="dictGrid"></div>
+
+  <footer>
+    IndustrCons Knowledge · Statik, internetsiz bilik bazası ·
+    <a href="https://industrcons.netlify.app/" target="_blank" rel="noopener">industrcons.netlify.app</a>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel modal">
+    <button class="closeBtn" id="closeModalBtn">✕ Bağla</button>
+    <div class="cat-label" id="modalCat"></div>
+    <h2 id="modalTitle"></h2>
+    <div class="body-text" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
