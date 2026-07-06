@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>IndustrCons Knowledge — Tikinti Bilik Bazası</title>
+<title>IndustrCons Knowledge Center — Tikinti Mühəndisliyi Bilik Platforması</title>
 <style>
 :root{
   --bg:#04070d;
@@ -158,6 +158,27 @@ button.go:active{ transform: translateY(1px); }
 .dict-item{ padding:12px 14px; }
 .dict-item b{ color:var(--cyan); font-size:13px; }
 .dict-item div{ font-size:12px; color:var(--text-dim); margin-top:4px; line-height:1.5;}
+.dict-item .dict-langs{ font-size:11px; color:var(--violet); margin-top:5px; }
+.lang-tag{ font-size:9px; border:1px solid var(--line); border-radius:4px; padding:1px 4px; color:var(--cyan); }
+
+.converter{ padding:18px; margin-top:16px; }
+.conv-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.conv-row:last-child{ margin-bottom:0; }
+#convCategory{ width:100%; }
+select{
+  padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+  background:rgba(4,8,16,0.7); color:var(--text); font-size:13.5px; outline:none;
+}
+select:focus{ border-color: var(--cyan); }
+#convInput{
+  width:110px; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+  background:rgba(4,8,16,0.7); color:var(--text); font-size:13.5px; outline:none;
+}
+.conv-eq{ color:var(--text-dim); font-size:16px; }
+.conv-output{
+  font-family: monospace; font-size:15px; color:var(--success); min-width:90px;
+  border-bottom:1px dashed var(--line); padding-bottom:2px;
+}
 
 .searchbar-inline{ margin: 14px 0 0; }
 .searchbar-inline input{
@@ -185,15 +206,15 @@ footer a{ color:var(--cyan); text-decoration:none; }
     <div class="brand">
       <div class="brand-mark"></div>
       <div>
-        <div class="brand-name">INDUSTRCONS</div>
-        <div class="brand-sub">KNOWLEDGE MODULE</div>
+        <div class="brand-name">INDUSTRCONS KNOWLEDGE CENTER</div>
+        <div class="brand-sub">CIVIL · STRUCTURAL · MEP · QA/QC · HSE</div>
       </div>
     </div>
     <span class="badge">● OFFLINE / LOCAL DATA</span>
   </header>
 
-  <h1 class="hero">Tikinti Bilik Bazası &amp; Köməkçi</h1>
-  <p class="lead">57 mövzu, 15 kateqoriya, 45 termin — beton, armatur, boya, izolyasiya, fasad, fit-out, profillər, sənaye materialları, suvaq, ağac, şüşə, dam örtüyü, santexnika, elektrik və döşəmə örtükləri üzrə. İnternet lazım deyil — bütün məlumat bu faylın daxilindədir.</p>
+  <h1 class="hero">Tikinti Mühəndisliyi Bilik Mərkəzi</h1>
+  <p class="lead">57 mövzu, 15 kateqoriya, 45 termin (AZ/EN/RU), mühəndis vahid çevirici — beton, armatur, boya, izolyasiya, fasad, fit-out, profillər, sənaye materialları, suvaq, ağac, şüşə, dam örtüyü, santexnika, elektrik və döşəmə örtükləri üzrə. İnternet lazım deyil — bütün məlumat bu qovluğun daxilindədir.</p>
 
   <div class="panel assistant">
     <div class="assistant-head">
@@ -218,11 +239,28 @@ footer a{ color:var(--cyan); text-decoration:none; }
   </div>
   <div class="entry-list" id="entryList"></div>
 
-  <div class="section-title"><h2>Tikinti Lüğəti</h2><span class="count" id="dictCount"></span></div>
+  <div class="section-title"><h2>Mühəndis Vahid Çevirici</h2></div>
+  <div class="panel converter">
+    <div class="conv-row">
+      <select id="convCategory"></select>
+    </div>
+    <div class="conv-row">
+      <input id="convInput" type="number" value="1" />
+      <select id="convFrom"></select>
+      <span class="conv-eq">=</span>
+      <span id="convOutput" class="conv-output">—</span>
+      <select id="convTo"></select>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Tikinti Lüğəti (AZ / EN / RU)</h2><span class="count" id="dictCount"></span></div>
+  <div class="searchbar-inline">
+    <input id="dictSearch" type="text" placeholder="Termin axtar (istənilən dildə)…" />
+  </div>
   <div class="dict-grid" id="dictGrid"></div>
 
   <footer>
-    IndustrCons Knowledge · Statik, internetsiz bilik bazası<br>
+    IndustrCons Knowledge Center · Statik, internetsiz bilik bazası<br>
     Qurucu: <b>Elvin Əsgərov</b> — IndustrCons Founder &amp; Community ·
     <a href="https://industrcons.netlify.app/" target="_blank" rel="noopener">industrcons.netlify.app</a>
   </footer>
@@ -758,53 +796,64 @@ Kimyəvi maddələrə, mexaniki zərbəyə davamlıdır, tez təmizlənir — za
 Laminat, parket və ya kafel altında mükəmməl düz əsas hazırlamaq üçün ən sürətli üsuldur.`},
 ];
 
+// Trilingual (AZ/EN/RU) dictionary — each entry: {az, en, ru, def}
 const DICTIONARY = [
-  ["Opalubka (qəlib)","Beton tökülərkən onun formasını saxlayan müvəqqəti konstruksiya (faner, metal, plastik)."],
-  ["Armatur","Betonun daxilində yerləşən polad çubuq, konstruksiyaya dartılma gücü verir."],
-  ["Marka (beton)","Betonun sıxılmaya davamlılıq göstəricisi (məs. M300)."],
-  ["Curing","Beton tökdükdən sonra onun düzgün quruması/bərkiməsi üçün baxım prosesi."],
-  ["Mühafizə qatı","Armatur ilə qəlib səthi arasında saxlanan beton qatı, korroziyadan qoruyur."],
-  ["Astar (grunt)","Boyadan əvvəl səthə çəkilən hazırlayıcı material, yapışmanı artırır."],
-  ["Şpaklovka","Səthdəki çat/dəliyi doldurub hamarlamaq üçün istifadə olunan material."],
-  ["Hidroizolyasiya","Su keçirməyə qarşı qoruyucu təbəqə/material."],
-  ["Termik körpü","Konstruksiyada istiliyin sərbəst keçdiyi, izolyasiya olunmamış zəif nöqtə."],
-  ["Sendviç panel","İki metal təbəqə arasında izolyasiya nüvəsi olan tikinti paneli."],
-  ["Qazbeton (aerated concrete)","Çox yüngül, məsaməli, yüksək istilik izolyasiyalı beton blok növü."],
-  ["Kronşteyn","Fasad panelini divara bərkidən metal dayaq elementi."],
-  ["Fuqa","Kafel/plitə arası tikişi dolduran material."],
-  ["Nivelir","Səthin şaquililiyini/üfüqiliyini ölçən alət və ya bu məqsədlə istifadə olunan qarışıq."],
-  ["Distansiya (ulitka)","Armaturu qəlib divarından müəyyən məsafədə saxlayan plastik element."],
-  ["Serpyanka","Gips karton tikişlərini möhkəmləndirmək üçün istifadə olunan tor lent."],
-  ["Overlap (nəhc)","İki armatur çubuğunun üst-üstə düşərək birləşdirilməsi üsulu."],
-  ["Mufta (coupler)","Armatur çubuqlarını mexaniki yolla birləşdirən rezbəli metal element."],
-  ["HPL","Yüksək təzyiqli laminat — fasad örtüyündə istifadə olunan yüngül material."],
-  ["ACP","Alüminium kompozit panel — fasad örtük materialı."],
-  ["Keramoqranit","Yüksək sıxlıqlı, davamlı keramik plitə növü, fasad və döşəmədə istifadə olunur."],
-  ["EPS","Genişlənmiş polistirol — yüngül istilik izolyasiya materialı."],
-  ["XPS","Ekstruziya olunmuş polistirol — nəmə davamlı, sıx istilik izolyasiya materialı."],
-  ["PIR/PUR","Sendviç panellərdə istifadə olunan yüksək effektiv izolyasiya köpüyü."],
-  ["Qazalov qaynağı (bitum)","Bitum membranın alov ilə qızdırılıb səthə yapışdırılması üsulu."],
-  ["Plastifikator","Beton qarışığının işlənmə asanlığını artıran kimyəvi əlavə."],
-  ["Antifriz əlavə","Soyuq havada betonun donmasının qarşısını alan kimyəvi qarışıq."],
-  ["Vintləmə (GKL)","Gips karton lövhələrin metal karkasa vint ilə bərkidilməsi."],
-  ["Klein/krestik","Kafel araları bərabər saxlamaq üçün istifadə olunan plastik xaç."],
-  ["Double-buttering","Böyük plitələrdə boşluq qalmaması üçün yapışqanın həm döşəməyə, həm plitəyə çəkilməsi."],
-  ["BOQ","Bill of Quantities — layihədə lazım olan material və işlərin siyahısı/həcm cədvəli."],
-  ["HSE","Health, Safety, Environment — iş yerində təhlükəsizlik və sağlamlıq standartları."],
-  ["QA/QC","Quality Assurance/Quality Control — keyfiyyətə təminat və nəzarət prosesləri."],
-  ["Monolit","Beton konstruksiyanın tikinti sahəsində birbaşa tökülərək hazırlanması üsulu."],
-  ["Sərbəst (üzən) döşəmə","Zərbə səsini azaltmaq üçün əsas döşəmədən elastik təbəqə ilə ayrılmış döşəmə sistemi."],
-  ["Buxar bərabəri","Nəmin izolyasiya daxilinə keçib kondensasiya olunmasının qarşısını alan membran."],
-  ["Termik ayrılma (thermal break)","Alüminium profildə istilik keçirməni azaldan daxili ayırıcı material (poliamid)."],
-  ["Latalar","Dam örtüyünün bərkidildiyi taxta/metal əsas çubuqlar."],
-  ["Konyok","Damın ən yuxarı, iki mailin birləşdiyi xətti."],
-  ["Drenaj","Suyun idarə olunan şəkildə yığılıb axıdılması sistemi."],
-  ["Stoyak","Bina daxilində şaquli istiqamətdə keçən əsas su/kanalizasiya xətti."],
-  ["UZO/DIF açar","Elektrik sızma cərəyanını aşkarlayıb dərhal xətti kəsən qoruyucu açar."],
-  ["PE xətti","Elektrik sistemində qoruyucu torpaqlama keçiricisi."],
-  ["Self-leveling","Öz ağırlığı ilə yayılıb düz səth yaradan döşəmə qarışığı."],
-  ["Podloji","Laminat/parket altına sərilən səs izolyasiya edən alt qat."],
+  {az:"Opalubka (qəlib)", en:"Formwork", ru:"Опалубка", def:"Beton tökülərkən onun formasını saxlayan müvəqqəti konstruksiya (faner, metal, plastik)."},
+  {az:"Armatur", en:"Rebar / Reinforcement", ru:"Арматура", def:"Betonun daxilində yerləşən polad çubuq, konstruksiyaya dartılma gücü verir."},
+  {az:"Marka (beton)", en:"Concrete grade", ru:"Марка бетона", def:"Betonun sıxılmaya davamlılıq göstəricisi (məs. M300)."},
+  {az:"Curing", en:"Curing", ru:"Уход за бетоном", def:"Beton tökdükdən sonra onun düzgün quruması/bərkiməsi üçün baxım prosesi."},
+  {az:"Mühafizə qatı", en:"Concrete cover", ru:"Защитный слой", def:"Armatur ilə qəlib səthi arasında saxlanan beton qatı, korroziyadan qoruyur."},
+  {az:"Astar (grunt)", en:"Primer", ru:"Грунтовка", def:"Boyadan əvvəl səthə çəkilən hazırlayıcı material, yapışmanı artırır."},
+  {az:"Şpaklovka", en:"Putty / Filler", ru:"Шпаклёвка", def:"Səthdəki çat/dəliyi doldurub hamarlamaq üçün istifadə olunan material."},
+  {az:"Hidroizolyasiya", en:"Waterproofing", ru:"Гидроизоляция", def:"Su keçirməyə qarşı qoruyucu təbəqə/material."},
+  {az:"Termik körpü", en:"Thermal bridge", ru:"Мостик холода", def:"Konstruksiyada istiliyin sərbəst keçdiyi, izolyasiya olunmamış zəif nöqtə."},
+  {az:"Sendviç panel", en:"Sandwich panel", ru:"Сэндвич-панель", def:"İki metal təbəqə arasında izolyasiya nüvəsi olan tikinti paneli."},
+  {az:"Qazbeton (aerated concrete)", en:"Aerated concrete", ru:"Газобетон", def:"Çox yüngül, məsaməli, yüksək istilik izolyasiyalı beton blok növü."},
+  {az:"Kronşteyn", en:"Bracket", ru:"Кронштейн", def:"Fasad panelini divara bərkidən metal dayaq elementi."},
+  {az:"Fuqa", en:"Grout", ru:"Затирка (фуга)", def:"Kafel/plitə arası tikişi dolduran material."},
+  {az:"Nivelir", en:"Level / Leveling", ru:"Нивелир", def:"Səthin şaquililiyini/üfüqiliyini ölçən alət və ya bu məqsədlə istifadə olunan qarışıq."},
+  {az:"Distansiya (ulitka)", en:"Rebar spacer", ru:"Фиксатор арматуры", def:"Armaturu qəlib divarından müəyyən məsafədə saxlayan plastik element."},
+  {az:"Serpyanka", en:"Mesh tape", ru:"Серпянка", def:"Gips karton tikişlərini möhkəmləndirmək üçün istifadə olunan tor lent."},
+  {az:"Overlap (nəhc)", en:"Lap splice", ru:"Нахлёст", def:"İki armatur çubuğunun üst-üstə düşərək birləşdirilməsi üsulu."},
+  {az:"Mufta (coupler)", en:"Rebar coupler", ru:"Муфта", def:"Armatur çubuqlarını mexaniki yolla birləşdirən rezbəli metal element."},
+  {az:"HPL", en:"High Pressure Laminate", ru:"ВПЛ-панель (HPL)", def:"Yüksək təzyiqli laminat — fasad örtüyündə istifadə olunan yüngül material."},
+  {az:"ACP", en:"Aluminium Composite Panel", ru:"Алюминиевая композитная панель", def:"Alüminium kompozit panel — fasad örtük materialı."},
+  {az:"Keramoqranit", en:"Porcelain tile", ru:"Керамогранит", def:"Yüksək sıxlıqlı, davamlı keramik plitə növü, fasad və döşəmədə istifadə olunur."},
+  {az:"EPS", en:"Expanded Polystyrene", ru:"Пенополистирол", def:"Genişlənmiş polistirol — yüngül istilik izolyasiya materialı."},
+  {az:"XPS", en:"Extruded Polystyrene", ru:"Экструдированный пенополистирол", def:"Ekstruziya olunmuş polistirol — nəmə davamlı, sıx istilik izolyasiya materialı."},
+  {az:"PIR/PUR", en:"PIR/PUR foam", ru:"ПИР/ППУ утеплитель", def:"Sendviç panellərdə istifadə olunan yüksək effektiv izolyasiya köpüyü."},
+  {az:"Qazalov qaynağı (bitum)", en:"Torch-on bitumen welding", ru:"Наплавление битума", def:"Bitum membranın alov ilə qızdırılıb səthə yapışdırılması üsulu."},
+  {az:"Plastifikator", en:"Plasticizer", ru:"Пластификатор", def:"Beton qarışığının işlənmə asanlığını artıran kimyəvi əlavə."},
+  {az:"Antifriz əlavə", en:"Antifreeze admixture", ru:"Противоморозная добавка", def:"Soyuq havada betonun donmasının qarşısını alan kimyəvi qarışıq."},
+  {az:"Vintləmə (GKL)", en:"Screw fixing (drywall)", ru:"Крепление саморезами (ГКЛ)", def:"Gips karton lövhələrin metal karkasa vint ilə bərkidilməsi."},
+  {az:"Klein/krestik", en:"Tile spacer", ru:"Крестик для плитки", def:"Kafel araları bərabər saxlamaq üçün istifadə olunan plastik xaç."},
+  {az:"Double-buttering", en:"Double-buttering", ru:"Двойное нанесение клея", def:"Böyük plitələrdə boşluq qalmaması üçün yapışqanın həm döşəməyə, həm plitəyə çəkilməsi."},
+  {az:"BOQ", en:"Bill of Quantities", ru:"Ведомость объёмов работ", def:"Layihədə lazım olan material və işlərin siyahısı/həcm cədvəli."},
+  {az:"HSE", en:"Health, Safety, Environment", ru:"Охрана труда и техника безопасности", def:"İş yerində təhlükəsizlik və sağlamlıq standartları."},
+  {az:"QA/QC", en:"Quality Assurance / Quality Control", ru:"Обеспечение и контроль качества", def:"Keyfiyyətə təminat və nəzarət prosesləri."},
+  {az:"Monolit", en:"Cast-in-place concrete", ru:"Монолит", def:"Beton konstruksiyanın tikinti sahəsində birbaşa tökülərək hazırlanması üsulu."},
+  {az:"Sərbəst (üzən) döşəmə", en:"Floating floor", ru:"Плавающий пол", def:"Zərbə səsini azaltmaq üçün əsas döşəmədən elastik təbəqə ilə ayrılmış döşəmə sistemi."},
+  {az:"Buxar bərabəri", en:"Vapor barrier", ru:"Пароизоляция", def:"Nəmin izolyasiya daxilinə keçib kondensasiya olunmasının qarşısını alan membran."},
+  {az:"Termik ayrılma", en:"Thermal break", ru:"Термовставка", def:"Alüminium profildə istilik keçirməni azaldan daxili ayırıcı material (poliamid)."},
+  {az:"Latalar", en:"Battens", ru:"Обрешётка", def:"Dam örtüyünün bərkidildiyi taxta/metal əsas çubuqlar."},
+  {az:"Konyok", en:"Ridge (roof)", ru:"Конёк", def:"Damın ən yuxarı, iki mailin birləşdiyi xətti."},
+  {az:"Drenaj", en:"Drainage", ru:"Дренаж", def:"Suyun idarə olunan şəkildə yığılıb axıdılması sistemi."},
+  {az:"Stoyak", en:"Riser (plumbing stack)", ru:"Стояк", def:"Bina daxilində şaquli istiqamətdə keçən əsas su/kanalizasiya xətti."},
+  {az:"UZO/DIF açar", en:"RCD / RCCB breaker", ru:"УЗО", def:"Elektrik sızma cərəyanını aşkarlayıb dərhal xətti kəsən qoruyucu açar."},
+  {az:"PE xətti", en:"Protective earth (PE) line", ru:"Линия заземления (PE)", def:"Elektrik sistemində qoruyucu torpaqlama keçiricisi."},
+  {az:"Self-leveling", en:"Self-leveling compound", ru:"Наливной пол", def:"Öz ağırlığı ilə yayılıb düz səth yaradan döşəmə qarışığı."},
+  {az:"Podloji", en:"Underlayment", ru:"Подложка", def:"Laminat/parket altına sərilən səs izolyasiya edən alt qat."},
 ];
+
+// Engineering unit converter — category -> {unit: factorToBase}
+const UNIT_CATEGORIES = {
+  "Uzunluq / Length / Длина": { base:"m", units:{ "mm":0.001, "cm":0.01, "m":1, "km":1000, "in (düym)":0.0254, "ft (fut)":0.3048, "yd":0.9144 } },
+  "Sahə / Area / Площадь": { base:"m²", units:{ "mm²":0.000001, "cm²":0.0001, "m²":1, "ha":10000, "ft²":0.092903 } },
+  "Həcm / Volume / Объём": { base:"m³", units:{ "L":0.001, "m³":1, "ft³":0.0283168, "gallon (US)":0.00378541 } },
+  "Çəki / Weight / Вес": { base:"kg", units:{ "g":0.001, "kg":1, "ton":1000, "lb":0.453592 } },
+  "Təzyiq / Pressure / Давление": { base:"Pa", units:{ "Pa":1, "kPa":1000, "MPa":1000000, "bar":100000, "psi":6894.76, "kgf/cm²":98066.5 } },
+  "Temperatur / Temperature / Температура": { base:"°C", units:{ "°C":1, "°F":1, "K":1 } },
+};
 
 
 /* =========================================================
@@ -858,16 +907,81 @@ function renderEntries(filterText){
   });
 }
 
-function renderDictionary(){
+function renderDictionary(filterText){
   const grid = document.getElementById('dictGrid');
+  let items = DICTIONARY;
+  if(filterText){
+    const f = filterText.toLowerCase();
+    items = items.filter(d => d.az.toLowerCase().includes(f) || d.en.toLowerCase().includes(f) || d.ru.toLowerCase().includes(f) || d.def.toLowerCase().includes(f));
+  }
   grid.innerHTML = '';
-  DICTIONARY.forEach(([term, def])=>{
+  items.forEach((d)=>{
     const div = document.createElement('div');
     div.className = 'panel dict-item';
-    div.innerHTML = `<b>${term}</b><div>${def}</div>`;
+    div.innerHTML = `<b>${d.az}</b>
+      <div class="dict-langs"><span class="lang-tag">EN</span> ${d.en} &nbsp; <span class="lang-tag">RU</span> ${d.ru}</div>
+      <div>${d.def}</div>`;
     grid.appendChild(div);
   });
-  document.getElementById('dictCount').textContent = DICTIONARY.length + ' termin';
+  document.getElementById('dictCount').textContent = items.length + ' termin (3 dildə)';
+}
+
+/* ---- Unit Converter ---- */
+function populateConverter(){
+  const catSelect = document.getElementById('convCategory');
+  catSelect.innerHTML = '';
+  Object.keys(UNIT_CATEGORIES).forEach(cat=>{
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+  populateUnitSelects();
+}
+
+function populateUnitSelects(){
+  const cat = document.getElementById('convCategory').value;
+  const units = Object.keys(UNIT_CATEGORIES[cat].units);
+  const fromSel = document.getElementById('convFrom');
+  const toSel = document.getElementById('convTo');
+  fromSel.innerHTML = ''; toSel.innerHTML = '';
+  units.forEach((u, i)=>{
+    const o1 = document.createElement('option'); o1.value = u; o1.textContent = u; fromSel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value = u; o2.textContent = u; toSel.appendChild(o2);
+  });
+  if(units.length>1) toSel.selectedIndex = 1;
+  runConversion();
+}
+
+function runConversion(){
+  const cat = document.getElementById('convCategory').value;
+  const def = UNIT_CATEGORIES[cat];
+  const val = parseFloat(document.getElementById('convInput').value);
+  const from = document.getElementById('convFrom').value;
+  const to = document.getElementById('convTo').value;
+  const out = document.getElementById('convOutput');
+
+  if(isNaN(val)){ out.textContent = '—'; return; }
+
+  // Special-case temperature since it's not a simple multiplier
+  if(cat.startsWith('Temperatur')){
+    out.textContent = convertTemperature(val, from, to).toFixed(4);
+    return;
+  }
+
+  const baseVal = val * def.units[from];
+  const result = baseVal / def.units[to];
+  out.textContent = result.toLocaleString('az-AZ', {maximumFractionDigits:6});
+}
+
+function convertTemperature(val, from, to){
+  let celsius;
+  if(from === '°C') celsius = val;
+  else if(from === '°F') celsius = (val - 32) * 5/9;
+  else celsius = val - 273.15; // Kelvin
+
+  if(to === '°C') return celsius;
+  if(to === '°F') return celsius * 9/5 + 32;
+  return celsius + 273.15;
 }
 
 function openModal(idx){
@@ -949,16 +1063,24 @@ function initEvents(){
   document.getElementById('entrySearch').addEventListener('input', (ev)=>{
     renderEntries(ev.target.value);
   });
+  document.getElementById('dictSearch').addEventListener('input', (ev)=>{
+    renderDictionary(ev.target.value);
+  });
   document.getElementById('overlay').addEventListener('click', (ev)=>{
     if(ev.target.id==='overlay') closeModal();
   });
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  document.getElementById('convCategory').addEventListener('change', populateUnitSelects);
+  document.getElementById('convFrom').addEventListener('change', runConversion);
+  document.getElementById('convTo').addEventListener('change', runConversion);
+  document.getElementById('convInput').addEventListener('input', runConversion);
 }
 
 renderCategories();
 renderEntries();
 renderDictionary();
 renderChips();
+populateConverter();
 initEvents();
 
 </script>
