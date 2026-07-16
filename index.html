@@ -1433,4 +1433,177 @@ function renderInspections(){
       <p class="insp-row insp-defect"><b>Tipik qüsurlar:</b> ${i.defects.join(' · ')}</p>
       <p class="insp-row insp-accept"><b>Qəbul meyarı:</b> ${i.acceptance}</p>
     `;
-    wr
+    wrap.appendChild(card);
+  });
+}
+
+/* ---- Unit Converter ---- */
+function populateConverter(){
+  const catSelect = document.getElementById('convCategory');
+  catSelect.innerHTML = '';
+  Object.keys(UNIT_CATEGORIES).forEach(cat=>{
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+  populateUnitSelects();
+}
+
+function populateUnitSelects(){
+  const cat = document.getElementById('convCategory').value;
+  const units = Object.keys(UNIT_CATEGORIES[cat].units);
+  const fromSel = document.getElementById('convFrom');
+  const toSel = document.getElementById('convTo');
+  fromSel.innerHTML = ''; toSel.innerHTML = '';
+  units.forEach((u, i)=>{
+    const o1 = document.createElement('option'); o1.value = u; o1.textContent = u; fromSel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value = u; o2.textContent = u; toSel.appendChild(o2);
+  });
+  if(units.length>1) toSel.selectedIndex = 1;
+  runConversion();
+}
+
+function runConversion(){
+  const cat = document.getElementById('convCategory').value;
+  const def = UNIT_CATEGORIES[cat];
+  const val = parseFloat(document.getElementById('convInput').value);
+  const from = document.getElementById('convFrom').value;
+  const to = document.getElementById('convTo').value;
+  const out = document.getElementById('convOutput');
+
+  if(isNaN(val)){ out.textContent = '—'; return; }
+
+  // Special-case temperature since it's not a simple multiplier
+  if(cat.startsWith('Temperatur')){
+    out.textContent = convertTemperature(val, from, to).toFixed(4);
+    return;
+  }
+
+  const baseVal = val * def.units[from];
+  const result = baseVal / def.units[to];
+  out.textContent = result.toLocaleString('az-AZ', {maximumFractionDigits:6});
+}
+
+function convertTemperature(val, from, to){
+  let celsius;
+  if(from === '°C') celsius = val;
+  else if(from === '°F') celsius = (val - 32) * 5/9;
+  else celsius = val - 273.15; // Kelvin
+
+  if(to === '°C') return celsius;
+  if(to === '°F') return celsius * 9/5 + 32;
+  return celsius + 273.15;
+}
+
+function openModal(idx){
+  const e = ENTRIES[idx];
+  const catObj = CATEGORIES.find(c=>c.key===e.cat);
+  document.getElementById('modalCat').textContent = catObj.icon + ' ' + catObj.name.toUpperCase();
+  document.getElementById('modalTitle').textContent = e.title;
+  document.getElementById('modalBody').textContent = e.body;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+/* Keyword-based assistant — no network calls, pure local matching */
+function scoreEntry(entry, queryWords){
+  const hay = (entry.title + ' ' + entry.kw.join(' ') + ' ' + entry.body).toLowerCase();
+  let score = 0;
+  queryWords.forEach(w=>{
+    if(w.length < 2) return;
+    if(entry.kw.some(k=>k.toLowerCase().includes(w))) score += 3;
+    if(hay.includes(w)) score += 1;
+  });
+  return score;
+}
+
+function ask(customQuery){
+  const input = document.getElementById('askInput');
+  const q = (customQuery !== undefined ? customQuery : input.value).trim();
+  if(!q) return;
+  input.value = q;
+  const words = q.toLowerCase().split(/[\s,.!?]+/).filter(Boolean);
+
+  const scored = ENTRIES.map((e,i)=>({i, e, s: scoreEntry(e, words)}))
+    .filter(x=>x.s>0)
+    .sort((a,b)=>b.s-a.s)
+    .slice(0,4);
+
+  const box = document.getElementById('answerBox');
+  box.style.display = 'block';
+  let html = `<div class="bubble user"><b>Siz:</b> ${q}</div>`;
+
+  if(scored.length === 0){
+    html += `<div class="bubble"><span class="no-match">Bu sualla dəqiq uyğun mövzu tapılmadı. Aşağıdakı kateqoriyalara baxaraq axtarışı sadələşdirin (məs: "beton", "boya", "elektrik").</span></div>`;
+  } else {
+    scored.forEach(({e})=>{
+      const catObj = CATEGORIES.find(c=>c.key===e.cat);
+      html += `<div class="bubble"><h4>${catObj.icon} ${e.title}</h4>${e.body.slice(0,260).replace(/\n/g,' ')}…
+        <div class="src">Tam mətn üçün klikləyin ↓</div></div>`;
+    });
+  }
+  box.innerHTML = html;
+
+  const bubbles = box.querySelectorAll('.bubble:not(.user)');
+  scored.forEach(({i}, idx)=>{
+    if(bubbles[idx]){
+      bubbles[idx].style.cursor = 'pointer';
+      bubbles[idx].onclick = ()=>openModal(i);
+    }
+  });
+}
+
+function renderChips(){
+  const chips = ["armatur necə bağlanır","boya neçə qat","beton marka","hidroizolyasiya","qazbeton","kabel en kəsiyi","laminat vs parket"];
+  const row = document.getElementById('chipRow');
+  row.innerHTML = '';
+  chips.forEach(c=>{
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = c;
+    el.onclick = ()=>ask(c);
+    row.appendChild(el);
+  });
+}
+
+function initEvents(){
+  document.getElementById('askInput').addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter') ask();
+  });
+  document.getElementById('goBtn').addEventListener('click', ()=>ask());
+  document.getElementById('entrySearch').addEventListener('input', (ev)=>{
+    renderEntries(ev.target.value);
+  });
+  document.getElementById('dictSearch').addEventListener('input', (ev)=>{
+    renderDictionary(ev.target.value);
+  });
+  document.getElementById('overlay').addEventListener('click', (ev)=>{
+    if(ev.target.id==='overlay') closeModal();
+  });
+  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  document.getElementById('convCategory').addEventListener('change', populateUnitSelects);
+  document.getElementById('convFrom').addEventListener('change', runConversion);
+  document.getElementById('convTo').addEventListener('change', runConversion);
+  document.getElementById('convInput').addEventListener('input', runConversion);
+  document.getElementById('acronymSearch').addEventListener('input', (ev)=>{
+    renderAcronyms(ev.target.value);
+  });
+}
+
+renderCategories();
+renderEntries();
+renderDictionary();
+renderChips();
+populateConverter();
+renderFormulas();
+renderMaterials();
+renderStandards();
+renderFailures();
+renderAcronyms();
+renderEquipment();
+renderInspections();
+initEvents();
+
+</script>
+</body>
+</html>
