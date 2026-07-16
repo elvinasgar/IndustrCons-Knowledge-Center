@@ -180,6 +180,58 @@ select:focus{ border-color: var(--cyan); }
   border-bottom:1px dashed var(--line); padding-bottom:2px;
 }
 
+/* Formula / Material / Standards / Failure cards */
+.formula-list, .material-list, .standards-list, .failure-list{
+  display:flex; flex-direction:column; gap:12px; margin-top:14px;
+}
+.formula-card, .material-card, .standard-card, .failure-card{ padding:16px; }
+.formula-card h3, .material-card h3, .standard-card h3, .failure-card h3{
+  font-size:14.5px; margin:0 0 8px; color:var(--text);
+}
+.formula-purpose{ font-size:12.5px; color:var(--text-dim); margin:0 0 8px; }
+.formula-eq{
+  font-family: monospace; font-size:13px; color:var(--cyan); background:rgba(45,227,255,0.06);
+  padding:8px 10px; border-radius:8px; margin-bottom:10px;
+}
+.formula-inputs{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
+.formula-inputs label{ font-size:11px; color:var(--text-dim); display:flex; flex-direction:column; gap:4px; }
+.formula-inputs input{
+  width:100px; padding:7px 9px; border-radius:8px; border:1px solid var(--line);
+  background:rgba(4,8,16,0.7); color:var(--text); font-size:13px; outline:none;
+}
+.formula-result{ font-size:13.5px; color:var(--success); margin-bottom:8px; }
+.formula-result span{ font-family:monospace; font-weight:700; }
+.formula-notes{ font-size:11.5px; color:var(--text-dim); margin:0; }
+
+.mat-row{ font-size:12.5px; color:var(--text-dim); margin:4px 0; line-height:1.5; }
+.mat-row b{ color:var(--text); }
+.mat-adv b{ color:var(--success); }
+.mat-dis b{ color:var(--magenta); }
+
+.std-row{ font-size:12.5px; color:var(--text-dim); margin:4px 0; line-height:1.5; }
+.std-row b{ color:var(--text); }
+.std-note{ font-style:italic; color:var(--violet); font-size:11.5px; }
+
+.failure-card{ border-left:2px solid var(--magenta); }
+.fail-row{ font-size:12.5px; color:var(--text-dim); margin:4px 0; line-height:1.5; }
+.fail-row b{ color:var(--text); }
+.fail-prevent b{ color:var(--success); }
+
+.acronym-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:10px; margin-top:14px; }
+.acronym-item{ padding:12px 14px; }
+.acronym-item b{ color:var(--cyan); font-size:14px; }
+.acronym-item .acr-full{ color:var(--violet); font-size:12px; }
+.acronym-item div{ font-size:12px; color:var(--text-dim); margin-top:4px; line-height:1.5; }
+
+.equipment-list, .inspection-list{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+.equipment-card, .inspection-card{ padding:16px; }
+.equipment-card h3, .inspection-card h3{ font-size:14.5px; margin:0 0 8px; color:var(--text); }
+.eq-row, .insp-row{ font-size:12.5px; color:var(--text-dim); margin:4px 0; line-height:1.5; }
+.eq-row b, .insp-row b{ color:var(--text); }
+.eq-safety b{ color:var(--magenta); }
+.insp-defect b{ color:var(--magenta); }
+.insp-accept b{ color:var(--success); }
+
 .searchbar-inline{ margin: 14px 0 0; }
 .searchbar-inline input{
   width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
@@ -238,6 +290,30 @@ footer a{ color:var(--cyan); text-decoration:none; }
     <input id="entrySearch" type="text" placeholder="Siyahı daxilində axtar…" />
   </div>
   <div class="entry-list" id="entryList"></div>
+
+  <div class="section-title"><h2>Abreviatura Axtarıcısı</h2><span class="count" id="acronymCount"></span></div>
+  <div class="searchbar-inline">
+    <input id="acronymSearch" type="text" placeholder="Abreviatura axtar (məs: NCR, RFI, BOQ)…" />
+  </div>
+  <div class="acronym-grid" id="acronymList"></div>
+
+  <div class="section-title"><h2>Tikinti Texnikası Kitabxanası</h2></div>
+  <div class="equipment-list" id="equipmentList"></div>
+
+  <div class="section-title"><h2>Sahə Yoxlama Köməkçisi</h2></div>
+  <div class="inspection-list" id="inspectionList"></div>
+
+  <div class="section-title"><h2>Düstur Kitabxanası (interaktiv kalkulyatorlar)</h2></div>
+  <div class="formula-list" id="formulaList"></div>
+
+  <div class="section-title"><h2>Material Profilləri (tam kart)</h2></div>
+  <div class="material-list" id="materialList"></div>
+
+  <div class="section-title"><h2>Standartlar (izahlı)</h2></div>
+  <div class="standards-list" id="standardsList"></div>
+
+  <div class="section-title"><h2>Problemlər &amp; Həll Yolları</h2></div>
+  <div class="failure-list" id="failureList"></div>
 
   <div class="section-title"><h2>Mühəndis Vahid Çevirici</h2></div>
   <div class="panel converter">
@@ -855,6 +931,280 @@ const UNIT_CATEGORIES = {
   "Temperatur / Temperature / Температура": { base:"°C", units:{ "°C":1, "°F":1, "K":1 } },
 };
 
+/* ================= FORMULA LIBRARY ================= */
+const FORMULAS = [
+  {key:"concrete_volume", title:"Beton həcmi (düzbucaqlı plita/döşəmə)", purpose:"Düzbucaqlı döşəmə/plita üçün lazım olan beton həcmini hesablamaq.",
+   formula:"Həcm (m³) = Uzunluq × En × Qalınlıq", notes:"Qalınlığı metrə çevirin (məs. 200mm = 0.2m). Real sifarişdə 3-5% ehtiyat əlavə etmək tövsiyə olunur.",
+   inputs:[{key:"l",label:"Uzunluq (m)",def:5},{key:"w",label:"En (m)",def:4},{key:"t",label:"Qalınlıq (m)",def:0.2}]},
+  {key:"rebar_weight", title:"Armatur çəkisi (metr üzrə)", purpose:"Verilmiş diametr və uzunluqda armaturun təxmini çəkisini tapmaq.",
+   formula:"Çəki (kq) = 0.00617 × d² × Uzunluq(m)", notes:"d — diametr (mm). Əmsal (0.00617) poladın sıxlığından (7850 kq/m³) irəli gəlir.",
+   inputs:[{key:"d",label:"Diametr (mm)",def:12},{key:"len",label:"Uzunluq (m)",def:100}]},
+  {key:"brick_qty", title:"Kərpic sayı (divar sahəsi üzrə)", purpose:"1m² divar üçün təxmini kərpic sayını hesablamaq (standart kərpic ölçüsü üzrə).",
+   formula:"Kərpic sayı ≈ Sahə(m²) × 60 (standart kərpic üçün, tikiş daxil)", notes:"Əmsal (≈60) kərpic ölçüsündən (250×120×65mm) və tikiş qalınlığından asılı dəyişir.",
+   inputs:[{key:"area",label:"Divar sahəsi (m²)",def:20}]},
+  {key:"paint_qty", title:"Boya miqdarı (litr)", purpose:"Divar/tavan sahəsi üçün lazım olan boya miqdarını hesablamaq.",
+   formula:"Litr = (Sahə(m²) × Qat sayı) ÷ Örtmə norması(m²/L)", notes:"Adi divar boyası üçün örtmə norması təxminən 8-10 m²/L.",
+   inputs:[{key:"area2",label:"Sahə (m²)",def:50},{key:"coats",label:"Qat sayı",def:2},{key:"coverage",label:"Örtmə norması (m²/L)",def:9}]},
+  {key:"area_rect", title:"Sahə hesablama (düzbucaqlı otaq)", purpose:"Otaq/sahənin ümumi sahəsini hesablamaq (döşəmə örtüyü, kafel və s. üçün baza).",
+   formula:"Sahə (m²) = Uzunluq × En", notes:"Mürəkkəb formalı otaqlarda sahəni düzbucaqlı hissələrə bölüb ayrı-ayrı hesablayın.",
+   inputs:[{key:"l2",label:"Uzunluq (m)",def:6},{key:"w2",label:"En (m)",def:4}]},
+  {key:"water_cement", title:"Su miqdarı (S/S nisbəti üzrə)", purpose:"Verilmiş sement miqdarı və istənilən su/sement nisbətinə görə lazım olan su miqdarını tapmaq.",
+   formula:"Su (kq) = Sement(kq) × S/S nisbəti", notes:"Tipik S/S nisbətləri: yüksək möhkəmlik 0.35-0.40, orta 0.45-0.50, aşağı yüklü 0.55-0.60.",
+   inputs:[{key:"cement",label:"Sement miqdarı (kq)",def:300},{key:"ratio",label:"S/S nisbəti",def:0.45}]},
+];
+
+/* ================= MATERIAL PROFILES ================= */
+const MATERIALS = [
+  {name:"Beton (M200-M400)", props:"Sıxılmaya davamlı, dartılmaya zəif, sıxlıq ≈2400 kq/m³.",
+   adv:"Yüksək sıxılma davamlılığı, yanğına davamlı, formalaşdırıla bilən, uzun ömürlü.",
+   dis:"Dartılmaya zəif (armatur tələb edir), ağır, qurumaq üçün vaxt tələb edir, çatlamaya meyilli.",
+   apps:"Özül, döşəmə, sütun, tir, yol örtüyü.", qc:"Slump test (işlənmə asanlığı), kub nümunə testi (28 günlük möhkəmlik).",
+   safety:"Qələvi tərkibli — dəri/göz təmasından qorunmaq lazımdır (əlcək, eynək)."},
+  {name:"Armatur (polad çubuq)", props:"Yüksək dartılma davamlılığı, sıxlıq ≈7850 kq/m³.",
+   adv:"Betonun dartılma zəifliyini kompensasiya edir, standartlaşdırılmış ölçülər.",
+   dis:"Paslanmaya meyilli (mühafizə qatı tələb edir), ağır, nəql xərcləri yüksək ola bilər.",
+   apps:"Bütün yükdaşıyıcı beton konstruksiyalar.", qc:"Sertifikat yoxlaması, diametr/profil ölçüsü yoxlaması.",
+   safety:"Kəskin uclar xəsarət riski yaradır — qapaqlama/əyilmə tələb olunur."},
+  {name:"Qazbeton (aerated concrete)", props:"Çox yüngül (≈500-700 kq/m³), yüksək istilik izolyasiyası.",
+   adv:"Yüngül (nəql/işçi qüvvəsi qənaəti), asan kəsilir/emal olunur, yaxşı istilik izolyasiyası.",
+   dis:"Mexaniki davamlılığı adi kərpicdən aşağı, nəmə qarşı əlavə qoruma tələb edir.",
+   apps:"Arakəsmə divarlar, qeyri-yükdaşıyıcı divarlar.", qc:"Sıxlıq/marka sertifikatı, rütubət səviyyəsi yoxlaması.",
+   safety:"Kəsim zamanı toz yaranır — maska tövsiyə olunur."},
+  {name:"Gips karton (GKL)", props:"Yüngül tavan/divar materialı, standart qalınlıq 12.5mm.",
+   adv:"Tez quraşdırılır, hamar səth, elektrik/santexnika xətlərini gizlətmək asandır.",
+   dis:"Mexaniki zərbəyə davamlılığı aşağı, nəmə davamlı olmayan növü nəm otaqda korlanır.",
+   apps:"Daxili divar/tavan, dekorativ formalar.", qc:"Nəmə davamlı (yaşıl) növün nəm otaqda istifadəsi yoxlanmalıdır.",
+   safety:"Toz yaranır zımparalama zamanı — ventilyasiya vacibdir."},
+  {name:"Mineral yun (izolyasiya)", props:"Yüngül, məsaməli, yanğına davamlı istilik/səs izolyasiya materialı.",
+   adv:"Yanğına davamlı, yaxşı səs izolyasiyası, nəfəs alan struktur.",
+   dis:"Nəmlənəndə xüsusiyyətini itirir, dəri qıcıqlandıra bilər (quraşdırma zamanı).",
+   apps:"Fasad, dam, divar arası izolyasiya.", qc:"Sıxlıq və qalınlıq spesifikasiyaya uyğunluğu.",
+   safety:"Əlcək, maska, uzun qollu geyim ilə işləmək tövsiyə olunur."},
+  {name:"Kafel (keramik plitə)", props:"Sərt, davamlı, su keçirməyən üzlük materialı.",
+   adv:"Təmizlənməsi asan, nəmə davamlı, geniş dizayn seçimi.",
+   dis:"Sərt zərbədə çata bilər, soyuq səth, quraşdırma dəqiqlik tələb edir.",
+   apps:"Hamam, mətbəx döşəmə/divar örtüyü.", qc:"Tikiş bərabərliyi, səviyyə yoxlaması, boşluq (hollow) testi.",
+   safety:"Kəsim zamanı toz/kəskin qırıq — qoruyucu eynək tövsiyə olunur."},
+  {name:"Fasad boyası (akril/silikon)", props:"UV-davamlı, hava şəraitinə dözümlü xarici örtük.",
+   adv:"Estetik görünüş, əlavə qoruma (UV, yağış), nisbətən ucuz təmir üsulu.",
+   dis:"Vaxtaşırı təzələnmə tələb edir, düzgün hazırlıq olmadan tez soyulur.",
+   apps:"Xarici fasad səthləri.", qc:"Nəm ölçümü (4%-dən az), astar tətbiqinin yoxlanması.",
+   safety:"Yüksəklikdə iş üçün təhlükəsizlik kəməri/skele tələb olunur."},
+  {name:"ACP (alüminium kompozit panel)", props:"Yüngül, iki alüminium təbəqə + polimer/mineral nüvə.",
+   adv:"Yüngül, müasir görünüş, tez quraşdırılır, geniş rəng seçimi.",
+   dis:"Nüvə növündən asılı olaraq yanğın riski (mineral nüvəli daha təhlükəsiz), zərbəyə həssas.",
+   apps:"Ventilyasiya olunan fasad örtüyü.", qc:"Nüvə tipi sertifikatı (yanğın sinifi), bərkitmə nöqtələrinin yoxlanması.",
+   safety:"Yüksəklikdə montaj üçün mütləq təhlükəsizlik avadanlığı."},
+  {name:"Laminat döşəmə", props:"HDF əsaslı, dekorativ+qoruyucu təbəqəli döşəmə materialı.",
+   adv:"Ucuz, tez quraşdırılır, geniş dizayn seçimi.",
+   dis:"Real ağac deyil, nəmə həssas, cızıqda təmir olunmur (dəyişdirilir).",
+   apps:"Yaşayış/ofis daxili döşəmə.", qc:"Dilatasiya boşluğunun (8-12mm) yoxlanması, alt qatın bərabərliyi.",
+   safety:"Xüsusi risk yoxdur, kəsim zamanı toz maskası tövsiyə olunur."},
+  {name:"PVC su borusu (kanalizasiya)", props:"Yüngül, korroziyaya davamlı, hamar daxili səth.",
+   adv:"Ucuz, asan kəsilir/birləşdirilir, uzun ömürlü, kimyəvi davamlı.",
+   dis:"Yüksək temperaturda deformasiya oluna bilər, uzun müddət UV-yə açıq qalanda kövrəkləşir.",
+   apps:"Kanalizasiya, yağış suyu drenajı.", qc:"Birləşmə tikişlərinin sızdırmazlıq testi.",
+   safety:"Kəsim zamanı iti kənarlar — əlcək tövsiyə olunur."},
+];
+
+/* ================= STANDARDS EXPLORER ================= */
+const STANDARDS = [
+  {code:"ACI (American Concrete Institute)", scope:"Beton layihələndirmə və icra standartları (ABŞ mənşəli, beynəlxalq istifadədə).",
+   applies:"Beton qarışığı, möhkəmlik tələbləri, armaturlaşdırma qaydaları.", note:"Layihələrdə tez-tez 'ACI 318' kimi istinad edilir."},
+  {code:"ASTM (American Society for Testing and Materials)", scope:"Material test metodları və spesifikasiya standartları.",
+   applies:"Material keyfiyyət testləri (beton, polad, izolyasiya və s.).", note:"Laborator test protokollarında ən çox istinad edilən mənbələrdən biridir."},
+  {code:"ISO (International Organization for Standardization)", scope:"Beynəlxalq, sahələrarası standartlar (idarəetmə sistemləri, keyfiyyət, ölçmə).",
+   applies:"QA/QC sistemləri (ISO 9001), ətraf mühit (ISO 14001), enerji.", note:"Layihə idarəetmə sənədləşməsində tez-tez tələb olunur."},
+  {code:"EN / Eurocode", scope:"Avropa İttifaqının struktur layihələndirmə standartları toplusu.",
+   applies:"Struktur hesablama (Eurocode 2 — beton, Eurocode 3 — polad və s.).", note:"Avropa bazarına yönəlik layihələrdə əsas istinad mənbəyidir."},
+  {code:"AISC (American Institute of Steel Construction)", scope:"Polad konstruksiya layihələndirmə və icra standartları.",
+   applies:"Polad karkas, birləşmə düyünləri, qaynaq tələbləri.", note:"Sənaye binaları və polad karkaslı obyektlərdə istinad edilir."},
+  {code:"NFPA (National Fire Protection Association)", scope:"Yanğın təhlükəsizliyi standartları.",
+   applies:"Yanğın söndürmə sistemləri, evakuasiya yolları, material yanğın sinifi.", note:"HSE sənədləşməsində geniş istifadə olunur."},
+  {code:"BS (British Standards)", scope:"Britaniya milli tikinti standartları toplusu.",
+   applies:"Struktur, material, icra qaydaları (bir çoxu artıq EN ilə əvəzlənib).", note:"Keçmiş Britaniya təsirli bölgələrdə hələ də istinad edilir."},
+  {code:"Azərbaycan Dövlət Tikinti Normaları (DTN)", scope:"Azərbaycanda rəsmi tikinti layihələndirmə və icra normativləri.",
+   applies:"Yerli tender və dövlət təsdiqli layihələrdə məcburi istinad mənbəyi.", note:"Beynəlxalq standartlarla (keçmiş Sovet SNiP əsaslı) paralel istifadə olunur."},
+];
+
+/* ================= FAILURE LIBRARY ================= */
+const FAILURES = [
+  {title:"Beton çatları (kiçik səthi çatlar)", symptoms:"Səthdə nazik, xətvari çatlar (adətən quruma zamanı).",
+   causes:"Sürətli quruma, curing-in düzgün aparılmaması, həddindən artıq su.", repair:"Kiçik çatlar epoksi inyeksiya və ya səth örtüyü ilə bağlanır.",
+   prevent:"Düzgün curing prosesi, S/S nisbətinə riayət, hava şəraitinə uyğun tədbir."},
+  {title:"Honeycombing (bal pətəyi effekti)", symptoms:"Beton səthində boşluqlar, çınqılın görünməsi.",
+   causes:"Yetərsiz vibrasiya, çox qatı qarışıq, qəlibin sıx doldurulmaması.", repair:"Boş sahə təmizlənir, yüksək keyfiyyətli məhlul/beton ilə doldurulur.",
+   prevent:"Düzgün vibrasiya tətbiqi, qarışığın işlənmə asanlığına diqqət."},
+  {title:"Seqreqasiya (materialların ayrılması)", symptoms:"İri agreqatların aşağıya çökməsi, qarışığın bərabərsiz paylanması.",
+   causes:"Həddindən artıq hündürlükdən tökmə, aşırı vibrasiya, uyğunsuz qarışıq dizaynı.", repair:"Struktur baxımından yenidən qiymətləndirmə, ciddi hallarda söküntü.",
+   prevent:"Tökmə hündürlüyünü məhdudlaşdırmaq, düzgün qarışıq nisbəti."},
+  {title:"Soyuq tikiş (cold joint)", symptoms:"İki ayrı tökmə mərhələsi arasında görünən xətt/zəif birləşmə.",
+   causes:"Tökmələr arası vaxt fasiləsinin çox uzun olması.", repair:"Struktur baxımdan qiymətləndirmə, lazım gələrsə əlavə bərkitmə.",
+   prevent:"Fasiləsiz tökmə planlaması, tökmə ardıcıllığının əvvəlcədən dəqiqləşdirilməsi."},
+  {title:"Metal (armatur) korroziyası", symptoms:"Beton səthində qonur ləkələr, şişmə, çatlama.",
+   causes:"Qeyri-kafi mühafizə qatı, xlorid təsiri (dəniz kənarı), karbonlaşma.", repair:"Zədələnmiş beton çıxarılır, paslı armatur təmizlənir/əvəz olunur.",
+   prevent:"Kafi mühafizə qatı, keyfiyyətli beton, uyğun armatur növü."},
+  {title:"Su sızması (hidroizolyasiya iflası)", symptoms:"Divar/tavanda nəm ləkələr, kif iyi, boyanın qabarması.",
+   causes:"Zədələnmiş/keyfiyyətsiz hidroizolyasiya, düzgün tikişlənməmiş membran.", repair:"Mənbə tapılır, zədəli izolyasiya təmir/əvəz olunur.",
+   prevent:"Keyfiyyətli material seçimi, düzgün tətbiq, mütəmadi yoxlama."},
+  {title:"Boya soyulması (qabarma)", symptoms:"Boya qatının divardan ayrılıb qabarması/soyulması.",
+   causes:"Nəmli səthə boya çəkilməsi, astar keçirilməməsi, uyğun olmayan boya növü.", repair:"Zədəli qat təmizlənir, səth düzgün hazırlanır, yenidən boyanır.",
+   prevent:"Boyadan əvvəl nəm ölçümü, düzgün astar tətbiqi."},
+  {title:"Kafel debonding (plitənin ayrılması)", symptoms:"Kafel döyəcləndikdə boş səs, plitənin yerindən oynaması.",
+   causes:"Yetərsiz yapışqan, düzgün tətbiq olunmayan (boşluqlu) yapışdırma.", repair:"Boş plitə çıxarılıb yenidən (double-buttering üsulu ilə) yapışdırılır.",
+   prevent:"Böyük plitələrdə double-buttering, düzgün yapışqan seçimi."},
+];
+
+/* ================= ACRONYM FINDER ================= */
+const ACRONYMS = [
+  {a:"NCR", full:"Non-Conformance Report", def:"Layihə tələblərinə uyğun olmayan iş/material barədə rəsmi bildiriş sənədi."},
+  {a:"RFI", full:"Request For Information", def:"Podratçının layihə komandasından texniki aydınlıq/məlumat tələb etdiyi rəsmi sorğu."},
+  {a:"MIR", full:"Material Inspection Request", def:"Material sahəyə gəldikdən sonra yoxlama üçün göndərilən rəsmi sorğu."},
+  {a:"ITR", full:"Inspection & Test Report/Record", def:"Aparılan yoxlama/testin nəticələrini sənədləşdirən rəsmi qeyd."},
+  {a:"WIR", full:"Work Inspection Request", def:"Bir iş mərhələsi bitdikdə növbəti mərhələyə keçmədən əvvəl yoxlama tələb edən sorğu."},
+  {a:"IR", full:"Inspection Request", def:"Ümumi yoxlama tələbi sənədi (WIR/MIR-in ümumiləşdirilmiş forması)."},
+  {a:"BOQ", full:"Bill of Quantities", def:"Layihədə lazım olan material və işlərin siyahısı/həcm cədvəli."},
+  {a:"RFQ", full:"Request For Quotation", def:"Təchizatçıdan qiymət təklifi tələb edən sənəd."},
+  {a:"IFC", full:"Issued For Construction", def:"Tikintiyə icazə verilmiş, son versiya çertyoj/sənəd statusu."},
+  {a:"AFC", full:"Approved For Construction", def:"Tikinti üçün rəsmi təsdiqlənmiş çertyoj statusu."},
+  {a:"TDS", full:"Technical Data Sheet", def:"Bir məhsulun texniki xüsusiyyətlərini təsvir edən sənəd."},
+  {a:"SDS", full:"Safety Data Sheet", def:"Kimyəvi maddənin təhlükəsizlik məlumatlarını əks etdirən sənəd (əvvəlki adı MSDS)."},
+  {a:"MSDS", full:"Material Safety Data Sheet", def:"SDS-in köhnə adlandırılması, eyni məzmunu daşıyır."},
+  {a:"HSE", full:"Health, Safety, Environment", def:"İş yerində sağlamlıq, təhlükəsizlik və ətraf mühit idarəetməsi."},
+  {a:"PPE", full:"Personal Protective Equipment", def:"Fərdi qoruyucu vasitələr (dəbilqə, əlcək, eynək və s.)."},
+  {a:"JSA", full:"Job Safety Analysis", def:"Konkret işin təhlükələrini əvvəlcədən analiz edən sənəd."},
+  {a:"HIRA", full:"Hazard Identification & Risk Assessment", def:"Təhlükələrin müəyyənləşdirilib risklərin qiymətləndirildiyi proses."},
+  {a:"PTW", full:"Permit To Work", def:"Yüksək riskli işlərə başlamazdan əvvəl tələb olunan rəsmi icazə sənədi."},
+  {a:"LOTO", full:"Lock Out Tag Out", def:"Baxım zamanı avadanlığın təhlükəsiz şəkildə söndürülüb kilidlənməsi proseduru."},
+  {a:"QA", full:"Quality Assurance", def:"Keyfiyyətin əvvəlcədən planlaşdırılıb təmin edilməsi prosesi."},
+  {a:"QC", full:"Quality Control", def:"Hazır iş/materialın keyfiyyətinin yoxlanılması prosesi."},
+  {a:"ITP", full:"Inspection and Test Plan", def:"Hər iş mərhələsi üçün hansı yoxlama/testlərin aparılacağını göstərən plan sənədi."},
+  {a:"NDT", full:"Non-Destructive Testing", def:"Materialı zədələmədən aparılan test üsulları (ultrasəs, rentgen və s.)."},
+  {a:"RFT", full:"Request For Tender", def:"Tender elan edən qurumun podratçılardan təklif tələb etdiyi sənəd."},
+  {a:"SOW", full:"Scope of Work", def:"Layihə çərçivəsində görüləcək işlərin dəqiq təsviri."},
+  {a:"WBS", full:"Work Breakdown Structure", def:"Layihənin kiçik idarəolunan hissələrə bölünmüş struktur ağacı."},
+  {a:"EOT", full:"Extension of Time", def:"Podratçının müqavilə müddətinin uzadılması üçün etdiyi rəsmi tələb."},
+  {a:"VO", full:"Variation Order", def:"İlkin müqaviləyə əlavə/dəyişiklik gətirən rəsmi sifariş."},
+  {a:"RFP", full:"Request For Proposal", def:"Podratçılardan həm texniki, həm maliyyə təklifi tələb edən sənəd."},
+  {a:"LOI", full:"Letter of Intent", def:"Tərəflərin əməkdaşlıq niyyətini bildirən rəsmi məktub (müqavilədən əvvəl)."},
+  {a:"NTP", full:"Notice To Proceed", def:"Podratçıya işə başlamaq üçün rəsmi icazə verən bildiriş."},
+  {a:"PO", full:"Purchase Order", def:"Material/xidmət sifarişini rəsmiləşdirən sənəd."},
+  {a:"SI", full:"Site Instruction", def:"Sahə mühəndisi/nəzarətçi tərəfindən verilən rəsmi göstəriş."},
+  {a:"TQ", full:"Technical Query", def:"Layihə sənədləri ilə bağlı texniki sual/aydınlıq tələbi."},
+  {a:"DLP", full:"Defects Liability Period", def:"Tikinti bitdikdən sonra podratçının qüsurlara görə məsuliyyət daşıdığı müddət."},
+  {a:"PC", full:"Practical Completion", def:"İşin faktiki olaraq başa çatdığı, istifadəyə hazır olduğu mərhələ."},
+  {a:"FM", full:"Facilities Management", def:"Bina/obyektin istismar dövründə idarə edilməsi."},
+  {a:"O&M", full:"Operation & Maintenance (Manual)", def:"Avadanlıq/sistemin istismar və baxım qaydalarını izah edən sənəd."},
+  {a:"BIM", full:"Building Information Modeling", def:"Binanın rəqəmsal, məlumat-zəngin 3D modelləşdirmə metodologiyası."},
+  {a:"MEP", full:"Mechanical, Electrical, Plumbing", def:"Mexaniki, elektrik və santexnika sistemlərinin ümumi adı."},
+  {a:"HVAC", full:"Heating, Ventilation, Air Conditioning", def:"İsitmə, ventilyasiya və kondisioner sistemləri."},
+  {a:"GFC", full:"Good For Construction", def:"IFC-yə bənzər, tikintiyə hazır çertyoj statusu."},
+  {a:"RFA", full:"Request For Approval", def:"Təsdiq üçün göndərilən rəsmi sorğu (material, metod və s. üçün)."},
+  {a:"RAMS", full:"Risk Assessment and Method Statement", def:"Risk qiymətləndirməsi və iş metodunu birləşdirən sənəd."},
+  {a:"COSHH", full:"Control of Substances Hazardous to Health", def:"Sağlamlığa zərərli maddələrin idarə edilməsi qaydaları."},
+  {a:"LTI", full:"Lost Time Injury", def:"İşçinin işdən kənarlaşmasına səbəb olan iş qəzası."},
+  {a:"TRIR", full:"Total Recordable Incident Rate", def:"Qeydə alınan bütün insidentlərin ümumi nisbət göstəricisi (HSE statistikası)."},
+  {a:"GRC", full:"Glass Reinforced Concrete", def:"Şüşə lifi ilə möhkəmləndirilmiş beton, yüngül dekorativ elementlərdə istifadə olunur."},
+  {a:"GFRC", full:"Glass Fiber Reinforced Concrete", def:"GRC-nin digər adlandırılması, eyni material."},
+  {a:"CPM", full:"Critical Path Method", def:"Layihə planlaşdırmasında ən uzun (kritik) iş ardıcıllığını müəyyən edən metod."},
+  {a:"QS", full:"Quantity Surveyor", def:"Layihənin maya dəyəri və həcm hesablamaları üzrə ixtisaslaşmış mütəxəssis."},
+  {a:"DC", full:"Document Controller", def:"Layihə sənədlərinin qeydiyyatı, paylanması və arxivləşdirilməsinə cavabdeh şəxs."},
+  {a:"PM", full:"Project Manager", def:"Layihənin ümumi idarə edilməsinə cavabdeh mütəxəssis."},
+  {a:"EPC", full:"Engineering, Procurement, Construction", def:"Layihələndirmə, təchizat və tikintinin bir podratçı tərəfindən aparıldığı müqavilə modeli."},
+  {a:"DB", full:"Design-Build", def:"Layihələndirmə və tikintinin eyni podratçı tərəfindən icra edildiyi model."},
+  {a:"LEED", full:"Leadership in Energy and Environmental Design", def:"Binaların ekoloji/enerji effektivliyini qiymətləndirən beynəlxalq sertifikat sistemi."},
+  {a:"FFL", full:"Finished Floor Level", def:"Hazır döşəmə səthinin layihə səviyyəsi."},
+  {a:"FGL", full:"Finished Ground Level", def:"Hazır torpaq/ərazi səthinin layihə səviyyəsi."},
+  {a:"RL", full:"Reduced Level", def:"Geodeziyada müəyyən baza nöqtəsinə görə hesablanmış hündürlük göstəricisi."},
+  {a:"TOC", full:"Top of Concrete", def:"Beton elementin ən yuxarı səviyyəsi (çertyojlarda qeyd olunur)."},
+  {a:"BM", full:"Benchmark", def:"Geodeziyada istinad edilən sabit hündürlük nöqtəsi."},
+];
+
+/* ================= EQUIPMENT LIBRARY ================= */
+const EQUIPMENT = [
+  {name:"Ekskavator", purpose:"Qazıntı, torpaq daşınması, yıxma işləri üçün əsas torpaq işi maşını.",
+   principle:"Hidravlik qol və kovşla torpağı qazıb yükləyir/dayaz məsafəyə daşıyır.",
+   apps:"Özül qazıntısı, xəndək açma, torpaq planlaşdırılması.", safety:"Fırlanma zonasında insan olmamalı, operator görüş sahəsinə diqqət etməli.",
+   inspection:"Hidravlik sızma, kovş dişlərinin aşınması, əyləc sistemi.", maintenance:"Mütəmadi yağ/filtr dəyişimi, hidravlik sistem yoxlaması."},
+  {name:"Buldozer", purpose:"Torpağın itələnib düzləndirilməsi, sahə hazırlığı.",
+   principle:"Ön bıçaq (blade) ilə torpağı itələyərək daşıyır/düzləndirir.",
+   apps:"Sahə planlaşdırılması, yol tikintisi, torpaq yığını daşınması.", safety:"Aşırı meyilli sahədə çevrilmə riski, arxa görüş kamerası vacibdir.",
+   inspection:"Tırtıl/təkər aşınması, bıçaq kəskinliyi, mühərrik göstəriciləri.", maintenance:"Tırtıl gərginliyi tənzimlənməsi, mütəmadi yağlama."},
+  {name:"Qüllə/Mobil Kran", purpose:"Ağır yüklərin şaquli/üfüqi daşınması.",
+   principle:"Tros və qarmaq sistemi ilə yükü qaldırıb müəyyən radiusda hərəkət etdirir.",
+   apps:"Prefabrik element montajı, materialların yüksəkliyə qaldırılması.", safety:"Yük həddi (load chart) ciddi riayət olunmalı, küləkli havada məhdudiyyət.",
+   inspection:"Tros aşınması, əyləc/limit sistemləri, gündəlik yoxlama jurnalı.", maintenance:"Mütəmadi sertifikatlaşdırma, tros dəyişimi qrafiki."},
+  {name:"Beton qarışdırıcı maşın (miksir)", purpose:"Beton komponentlərinin qarışdırılıb tikinti sahəsinə çatdırılması.",
+   principle:"Fırlanan baraban qarışığı daim hərəkətdə saxlayır ki, bərkiməsin.",
+   apps:"Hazır beton çatdırılması.", safety:"Baraban fırlanarkən yaxınlaşmamaq, arxa görüş zonasına diqqət.",
+   inspection:"Baraban vəziyyəti, hidravlik sistem, təkər/əyləc yoxlaması.", maintenance:"Hər çatdırmadan sonra baraban yuyulması (beton qalığı qalmasın)."},
+  {name:"Beton vibratoru", purpose:"Tökülən betondaki hava boşluqlarını çıxarmaq, sıxlaşdırmaq.",
+   principle:"Yüksək tezlikli titrəyiş betonu sıxlaşdırıb honeycombing-in qarşısını alır.",
+   apps:"Sütun, tir, döşəmə betonlaşdırılması.", safety:"Elektrik/yanacaqlı modellərdə uzun müddət əl-qol vibrasiyasına məruz qalmamaq.",
+   inspection:"İynə/başlıq vəziyyəti, kabel izolyasiyası.", maintenance:"İşdən sonra təmizləmə, motor yağlaması."},
+  {name:"Torpaq/asfalt katoku (kompaktor)", purpose:"Torpaq/asfalt təbəqələrinin sıxlaşdırılması.",
+   principle:"Ağır silindr + vibrasiya ilə səthi sıxlaşdırır.", apps:"Yol əsası, asfalt örtüyü, özül altı sıxlaşdırma.",
+   safety:"Aşırı meyildə sürüşmə riski, geriyə hərəkətdə görüş.", inspection:"Silindr səthi, vibrasiya mexanizmi, hidravlik sistem.",
+   maintenance:"Mütəmadi yağ dəyişimi, silindr təmizliyi."},
+  {name:"Total Station (elektron tacheometr)", purpose:"Dəqiq geodezik ölçmə və nöqtə yerləşdirmə.",
+   principle:"Lazer/optik siqnalla məsafə və bucaq ölçərək koordinat müəyyən edir.", apps:"Sərhəd, ox xətti, hündürlük ölçmələri.",
+   safety:"Cihazın kalibrasiyası vaxtaşırı yoxlanmalı (səhv ölçmə riski).", inspection:"Optik təmizlik, batareya, kalibrasiya sertifikatı.",
+   maintenance:"Rütubətdən qorumaq, mütəmadi kalibrasiya."},
+  {name:"Lazer səviyyə (laser level)", purpose:"Üfüqi/şaquli səviyyənin sürətli təyin edilməsi.",
+   principle:"Fırlanan lazer şüası ilə sabit müstəvi proyeksiya edir.", apps:"Suvaq, kafel, tavan işlərində səviyyə nəzarəti.",
+   safety:"Lazer şüasına birbaşa baxmamaq.", inspection:"Kalibrasiya dəqiqliyi, batareya vəziyyəti.", maintenance:"Zərbədən qorumaq, quru saxlamaq."},
+  {name:"Generator", purpose:"Elektrik təchizatı olmayan sahələrdə müvəqqəti enerji mənbəyi.",
+   principle:"Yanacaqla işləyən mühərrik elektrik enerjisi istehsal edir.", apps:"Alət işlətmə, işıqlandırma, kran/nasos təchizatı.",
+   safety:"Qapalı məkanda işlətməmək (CO qazı riski), torpaqlama tələb olunur.",
+   inspection:"Yanacaq/yağ səviyyəsi, kabel izolyasiyası.", maintenance:"Mütəmadi yağ dəyişimi, filtr təmizliyi."},
+  {name:"Hava kompressoru", purpose:"Pnevmatik alətlərə (çəkic, boya pistoleti) təzyiqli hava təchizatı.",
+   principle:"Havanı sıxaraq təzyiq altında saxlayır.", apps:"Pnevmatik alətlər, səthin təmizlənməsi (hava üfürmə).",
+   safety:"Təzyiq relyefi olmadan şlanqı ayırmamaq.", inspection:"Şlanq bütövlüyü, təzyiq göstəricisi.", maintenance:"Kondensat boşaldılması, filtr dəyişimi."},
+  {name:"Qaynaq aparatı", purpose:"Metal elementlərin birləşdirilməsi.", principle:"Elektrik qövsü ilə metalı əridib birləşdirir.",
+   apps:"Polad konstruksiya, armatur qaynağı, metal qapı/pəncərə.", safety:"Qaynaq maskası, əlcək, ventilyasiya mütləqdir (tüstü/UV şüası).",
+   inspection:"Kabel izolyasiyası, torpaqlama, elektrod vəziyyəti.", maintenance:"Birləşmələrin yoxlanması, soyutma sisteminə nəzarət."},
+  {name:"Beton nasosu", purpose:"Betonun uzaq məsafəyə/yüksəkliyə boru ilə nəql edilməsi.",
+   principle:"Hidravlik təzyiqlə betonu boru xətti ilə vurur.", apps:"Yüksək mərtəbəli tikinti, çətin çıxışlı sahələr.",
+   safety:"Boru partlaması riski — təzyiq həddinə riayət, çıxış zonasından uzaq durmaq.", inspection:"Boru bütövlüyü, hidravlik sistem, klapan vəziyyəti.",
+   maintenance:"İşdən sonra boru təmizliyi (beton qalmasın)."},
+  {name:"Skele (qurulmuş konstruksiya)", purpose:"Yüksəklikdə iş üçün müvəqqəti platforma.",
+   principle:"Metal çərçivə elementlərinin bir-birinə bərkidilməsi ilə qurulur.", apps:"Fasad işləri, hündür divar/tavan işləri.",
+   safety:"Mütəmadi struktur yoxlaması, məhəccər/şəbəkə mütləqdir, yük həddi aşılmamalı.", inspection:"Bərkitmə düyünləri, əsas dayaq stabilliyi.",
+   maintenance:"Paslanmış elementlərin dəyişdirilməsi."},
+  {name:"Beton kəsən maşın (disk kəsici)", purpose:"Beton/asfalt səthlərinin kəsilməsi (deformasiya tikişi və s.).",
+   principle:"Almaz diskin yüksək sürətlə fırlanaraq materialı kəsməsi.", apps:"Dilatasiya tikişi açma, beton söküntüsü hazırlığı.",
+   safety:"Toz maskası, eynək, diskin vəziyyətinin yoxlanması (çat olmamalı).", inspection:"Disk aşınması, su soyutma sistemi (tozu azaltmaq üçün).",
+   maintenance:"Disk dəyişimi qrafiki, mühərrik yağlaması."},
+];
+
+/* ================= SITE INSPECTION ASSISTANT ================= */
+const INSPECTIONS = [
+  {area:"Civil Works (Ümumi tikinti)", points:["Ox xətlərinin (axis) çertyoja uyğunluğu","Səviyyə (level) yoxlaması","Ölçü dəqiqliyi"],
+   defects:["Ox xəttindən kənara çıxma","Səviyyə fərqi"], acceptance:"Layihə çertyojundan ±tolerantlıq daxilində sapma (adətən layihədə göstərilir)."},
+  {area:"Beton (Concrete)", points:["Qəlibin bütövlüyü/şaquililiyi","Armatur mühafizə qatı","Slump test nəticəsi","Vibrasiya keyfiyyəti"],
+   defects:["Honeycombing","Seqreqasiya","Səthi çatlar"], acceptance:"28 günlük kub test nəticəsi layihə markasına uyğun olmalıdır."},
+  {area:"Armatur (Rebar)", points:["Diametr/say çertyoja uyğunluğu","Bağlama keyfiyyəti","Mühafizə qatı (distansiya elementləri)","Overlap uzunluğu"],
+   defects:["Yanlış diametr","Kifayət qədər olmayan overlap","Paslanmış armatur"], acceptance:"Çertyojda göstərilən diametr/say/məsafə tam uyğun olmalıdır."},
+  {area:"Hörgü (Masonry)", points:["Şaquililik/üfüqilik (nivelir)","Tikiş qalınlığının bərabərliyi","Material keyfiyyəti"],
+   defects:["Əyri divar","Qeyri-bərabər tikişlər","Çatlar"], acceptance:"Şaquililikdən sapma adətən 1m-də maksimum bir neçə mm-dən çox olmamalıdır (layihəyə görə)."},
+  {area:"Hidroizolyasiya (Waterproofing)", points:["Səthin quruluğu/təmizliyi","Membran/örtüyün fasiləsizliyi","Tikiş/örtüşmə sahələri"],
+   defects:["Qopma/köpüklənmə","Natamam örtüşmə","Deşilmə"], acceptance:"Su testi (flood test) zamanı sızma müşahidə olunmamalıdır."},
+  {area:"Boya (Painting)", points:["Səth hazırlığı","Astar tətbiqi","Qat sayı və qurutma müddəti"],
+   defects:["Qeyri-bərabər rəng","Qabarma","Kifayət etməyən örtmə"], acceptance:"Bütün səth bərabər rəng/parlaqlıqda, qabarma/soyulma olmamalıdır."},
+  {area:"Polad Konstruksiya (Steel Structures)", points:["Qaynaq keyfiyyəti","Bolt bağlantılarının möhkəmliyi","Antikorroziya örtüyü"],
+   defects:["Natamam qaynaq","Boş boltlar","Pas nöqtələri"], acceptance:"Qaynaq NDT test tələblərinə cavab verməli, bolt momenti spesifikasiyaya uyğun olmalıdır."},
+  {area:"HVAC", points:["Kanalların bağlantı sıxlığı","İzolyasiya bütövlüyü","Avadanlıq bərkitməsi"],
+   defects:["Hava sızması","İzolyasiya boşluğu","Səs-vibrasiya problemi"], acceptance:"Hava axını layihə dəyərlərinə uyğun olmalı, sızma testi keçilməlidir."},
+  {area:"Santexnika (Plumbing)", points:["Boru meyli (kanalizasiya üçün)","Birləşmələrin sıxlığı","Təzyiq testi"],
+   defects:["Sızma","Yanlış meyl","Yanlış diametr"], acceptance:"Təzyiq testi (adətən işçi təzyiqin 1.5 qatı) heç bir sızma olmadan keçilməlidir."},
+  {area:"Elektrik (Electrical)", points:["Kabel en kəsiyi uyğunluğu","Torpaqlama davamlılığı","Panel/avtomat markalanması"],
+   defects:["Yanlış kabel ölçüsü","Torpaqlama yoxluğu","Markalanmamış dövrələr"], acceptance:"Torpaqlama müqaviməti standart hədd daxilində olmalı, bütün dövrələr test edilməlidir."},
+  {area:"Yanğınsöndürmə (Fire Fighting)", points:["Sprinkler yerləşməsi","Boru təzyiqi","Yanğın söndürücülərin yerləşməsi/müddəti"],
+   defects:["Bloklanmış sprinkler","Yetərsiz təzyiq","Vaxtı keçmiş ogntutucu"], acceptance:"Sistem hidravlik test tələblərinə uyğun olmalı, bütün nöqtələr əlçatan olmalıdır."},
+  {area:"Fit-Out", points:["Ölçü/plan uyğunluğu","Səth keyfiyyəti (divar, döşəmə)","Qapı/pəncərə funksionallığı"],
+   defects:["Səthdə qeyri-bərabərlik","Yanlış rəng/material","Funksional problem (qapı bağlanmır və s.)"], acceptance:"Bütün elementlər dizayn sənədinə uyğun və funksional olmalıdır."},
+];
+
 
 /* =========================================================
    IndustrCons Knowledge — APPLICATION LOGIC
@@ -926,163 +1276,161 @@ function renderDictionary(filterText){
   document.getElementById('dictCount').textContent = items.length + ' termin (3 dildə)';
 }
 
-/* ---- Unit Converter ---- */
-function populateConverter(){
-  const catSelect = document.getElementById('convCategory');
-  catSelect.innerHTML = '';
-  Object.keys(UNIT_CATEGORIES).forEach(cat=>{
-    const opt = document.createElement('option');
-    opt.value = cat; opt.textContent = cat;
-    catSelect.appendChild(opt);
+/* ---- Formula Library ---- */
+function renderFormulas(){
+  const wrap = document.getElementById('formulaList');
+  wrap.innerHTML = '';
+  FORMULAS.forEach((f)=>{
+    const card = document.createElement('div');
+    card.className = 'panel formula-card';
+    let inputsHtml = f.inputs.map(inp =>
+      `<label>${inp.label}<input type="number" data-fkey="${f.key}" data-ikey="${inp.key}" value="${inp.def}" class="formula-input"/></label>`
+    ).join('');
+    card.innerHTML = `
+      <h3>${f.title}</h3>
+      <p class="formula-purpose">${f.purpose}</p>
+      <div class="formula-eq">${f.formula}</div>
+      <div class="formula-inputs">${inputsHtml}</div>
+      <div class="formula-result">Nəticə: <span id="result-${f.key}">—</span></div>
+      <p class="formula-notes">${f.notes}</p>
+    `;
+    wrap.appendChild(card);
   });
-  populateUnitSelects();
+
+  document.querySelectorAll('.formula-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>computeFormula(inp.dataset.fkey));
+    computeFormula(inp.dataset.fkey);
+  });
 }
 
-function populateUnitSelects(){
-  const cat = document.getElementById('convCategory').value;
-  const units = Object.keys(UNIT_CATEGORIES[cat].units);
-  const fromSel = document.getElementById('convFrom');
-  const toSel = document.getElementById('convTo');
-  fromSel.innerHTML = ''; toSel.innerHTML = '';
-  units.forEach((u, i)=>{
-    const o1 = document.createElement('option'); o1.value = u; o1.textContent = u; fromSel.appendChild(o1);
-    const o2 = document.createElement('option'); o2.value = u; o2.textContent = u; toSel.appendChild(o2);
+function getFormulaInputs(fkey){
+  const vals = {};
+  document.querySelectorAll(`.formula-input[data-fkey="${fkey}"]`).forEach(inp=>{
+    vals[inp.dataset.ikey] = parseFloat(inp.value) || 0;
   });
-  if(units.length>1) toSel.selectedIndex = 1;
-  runConversion();
+  return vals;
 }
 
-function runConversion(){
-  const cat = document.getElementById('convCategory').value;
-  const def = UNIT_CATEGORIES[cat];
-  const val = parseFloat(document.getElementById('convInput').value);
-  const from = document.getElementById('convFrom').value;
-  const to = document.getElementById('convTo').value;
-  const out = document.getElementById('convOutput');
-
-  if(isNaN(val)){ out.textContent = '—'; return; }
-
-  // Special-case temperature since it's not a simple multiplier
-  if(cat.startsWith('Temperatur')){
-    out.textContent = convertTemperature(val, from, to).toFixed(4);
-    return;
+function computeFormula(fkey){
+  const v = getFormulaInputs(fkey);
+  const out = document.getElementById('result-' + fkey);
+  let result;
+  switch(fkey){
+    case 'concrete_volume': result = (v.l * v.w * v.t).toFixed(3) + ' m³'; break;
+    case 'rebar_weight': result = (0.00617 * v.d * v.d * v.len).toFixed(2) + ' kq'; break;
+    case 'brick_qty': result = Math.ceil(v.area * 60) + ' ədəd (təxmini)'; break;
+    case 'paint_qty': result = ((v.area2 * v.coats) / v.coverage).toFixed(2) + ' litr'; break;
+    case 'area_rect': result = (v.l2 * v.w2).toFixed(2) + ' m²'; break;
+    case 'water_cement': result = (v.cement * v.ratio).toFixed(1) + ' kq su'; break;
+    default: result = '—';
   }
-
-  const baseVal = val * def.units[from];
-  const result = baseVal / def.units[to];
-  out.textContent = result.toLocaleString('az-AZ', {maximumFractionDigits:6});
+  if(out) out.textContent = result;
 }
 
-function convertTemperature(val, from, to){
-  let celsius;
-  if(from === '°C') celsius = val;
-  else if(from === '°F') celsius = (val - 32) * 5/9;
-  else celsius = val - 273.15; // Kelvin
-
-  if(to === '°C') return celsius;
-  if(to === '°F') return celsius * 9/5 + 32;
-  return celsius + 273.15;
-}
-
-function openModal(idx){
-  const e = ENTRIES[idx];
-  const catObj = CATEGORIES.find(c=>c.key===e.cat);
-  document.getElementById('modalCat').textContent = catObj.icon + ' ' + catObj.name.toUpperCase();
-  document.getElementById('modalTitle').textContent = e.title;
-  document.getElementById('modalBody').textContent = e.body;
-  document.getElementById('overlay').classList.add('show');
-}
-function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
-
-/* Keyword-based assistant — no network calls, pure local matching */
-function scoreEntry(entry, queryWords){
-  const hay = (entry.title + ' ' + entry.kw.join(' ') + ' ' + entry.body).toLowerCase();
-  let score = 0;
-  queryWords.forEach(w=>{
-    if(w.length < 2) return;
-    if(entry.kw.some(k=>k.toLowerCase().includes(w))) score += 3;
-    if(hay.includes(w)) score += 1;
+/* ---- Material Profiles ---- */
+function renderMaterials(){
+  const wrap = document.getElementById('materialList');
+  wrap.innerHTML = '';
+  MATERIALS.forEach((m)=>{
+    const card = document.createElement('div');
+    card.className = 'panel material-card';
+    card.innerHTML = `
+      <h3>${m.name}</h3>
+      <p class="mat-row"><b>Xüsusiyyətlər:</b> ${m.props}</p>
+      <p class="mat-row mat-adv"><b>Üstünlüklər:</b> ${m.adv}</p>
+      <p class="mat-row mat-dis"><b>Çatışmazlıqlar:</b> ${m.dis}</p>
+      <p class="mat-row"><b>Tətbiq sahəsi:</b> ${m.apps}</p>
+      <p class="mat-row"><b>Keyfiyyət nəzarəti:</b> ${m.qc}</p>
+      <p class="mat-row"><b>Təhlükəsizlik:</b> ${m.safety}</p>
+    `;
+    wrap.appendChild(card);
   });
-  return score;
 }
 
-function ask(customQuery){
-  const input = document.getElementById('askInput');
-  const q = (customQuery !== undefined ? customQuery : input.value).trim();
-  if(!q) return;
-  input.value = q;
-  const words = q.toLowerCase().split(/[\s,.!?]+/).filter(Boolean);
+/* ---- Standards Explorer ---- */
+function renderStandards(){
+  const wrap = document.getElementById('standardsList');
+  wrap.innerHTML = '';
+  STANDARDS.forEach((s)=>{
+    const card = document.createElement('div');
+    card.className = 'panel standard-card';
+    card.innerHTML = `
+      <h3>${s.code}</h3>
+      <p class="std-row"><b>Əhatə dairəsi:</b> ${s.scope}</p>
+      <p class="std-row"><b>Harada tətbiq olunur:</b> ${s.applies}</p>
+      <p class="std-row std-note">${s.note}</p>
+    `;
+    wrap.appendChild(card);
+  });
+}
 
-  const scored = ENTRIES.map((e,i)=>({i, e, s: scoreEntry(e, words)}))
-    .filter(x=>x.s>0)
-    .sort((a,b)=>b.s-a.s)
-    .slice(0,4);
+/* ---- Failure Library ---- */
+function renderFailures(){
+  const wrap = document.getElementById('failureList');
+  wrap.innerHTML = '';
+  FAILURES.forEach((f)=>{
+    const card = document.createElement('div');
+    card.className = 'panel failure-card';
+    card.innerHTML = `
+      <h3>⚠ ${f.title}</h3>
+      <p class="fail-row"><b>Əlamətlər:</b> ${f.symptoms}</p>
+      <p class="fail-row"><b>Səbəblər:</b> ${f.causes}</p>
+      <p class="fail-row"><b>Təmir:</b> ${f.repair}</p>
+      <p class="fail-row fail-prevent"><b>Qarşısını almaq:</b> ${f.prevent}</p>
+    `;
+    wrap.appendChild(card);
+  });
+}
 
-  const box = document.getElementById('answerBox');
-  box.style.display = 'block';
-  let html = `<div class="bubble user"><b>Siz:</b> ${q}</div>`;
-
-  if(scored.length === 0){
-    html += `<div class="bubble"><span class="no-match">Bu sualla dəqiq uyğun mövzu tapılmadı. Aşağıdakı kateqoriyalara baxaraq axtarışı sadələşdirin (məs: "beton", "boya", "elektrik").</span></div>`;
-  } else {
-    scored.forEach(({e})=>{
-      const catObj = CATEGORIES.find(c=>c.key===e.cat);
-      html += `<div class="bubble"><h4>${catObj.icon} ${e.title}</h4>${e.body.slice(0,260).replace(/\n/g,' ')}…
-        <div class="src">Tam mətn üçün klikləyin ↓</div></div>`;
-    });
+/* ---- Acronym Finder ---- */
+function renderAcronyms(filterText){
+  const wrap = document.getElementById('acronymList');
+  let items = ACRONYMS;
+  if(filterText){
+    const f = filterText.toLowerCase();
+    items = items.filter(a => a.a.toLowerCase().includes(f) || a.full.toLowerCase().includes(f) || a.def.toLowerCase().includes(f));
   }
-  box.innerHTML = html;
+  wrap.innerHTML = '';
+  items.forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'panel acronym-item';
+    div.innerHTML = `<b>${a.a}</b> — <span class="acr-full">${a.full}</span><div>${a.def}</div>`;
+    wrap.appendChild(div);
+  });
+  document.getElementById('acronymCount').textContent = items.length + ' abreviatura';
+}
 
-  const bubbles = box.querySelectorAll('.bubble:not(.user)');
-  scored.forEach(({i}, idx)=>{
-    if(bubbles[idx]){
-      bubbles[idx].style.cursor = 'pointer';
-      bubbles[idx].onclick = ()=>openModal(i);
-    }
+/* ---- Equipment Library ---- */
+function renderEquipment(){
+  const wrap = document.getElementById('equipmentList');
+  wrap.innerHTML = '';
+  EQUIPMENT.forEach(e=>{
+    const card = document.createElement('div');
+    card.className = 'panel equipment-card';
+    card.innerHTML = `
+      <h3>🔧 ${e.name}</h3>
+      <p class="eq-row"><b>Təyinat:</b> ${e.purpose}</p>
+      <p class="eq-row"><b>İş prinsipi:</b> ${e.principle}</p>
+      <p class="eq-row"><b>Tətbiq:</b> ${e.apps}</p>
+      <p class="eq-row eq-safety"><b>Təhlükəsizlik:</b> ${e.safety}</p>
+      <p class="eq-row"><b>Yoxlama:</b> ${e.inspection}</p>
+      <p class="eq-row"><b>Baxım:</b> ${e.maintenance}</p>
+    `;
+    wrap.appendChild(card);
   });
 }
 
-function renderChips(){
-  const chips = ["armatur necə bağlanır","boya neçə qat","beton marka","hidroizolyasiya","qazbeton","kabel en kəsiyi","laminat vs parket"];
-  const row = document.getElementById('chipRow');
-  row.innerHTML = '';
-  chips.forEach(c=>{
-    const el = document.createElement('div');
-    el.className = 'chip';
-    el.textContent = c;
-    el.onclick = ()=>ask(c);
-    row.appendChild(el);
-  });
-}
-
-function initEvents(){
-  document.getElementById('askInput').addEventListener('keydown', (ev)=>{
-    if(ev.key === 'Enter') ask();
-  });
-  document.getElementById('goBtn').addEventListener('click', ()=>ask());
-  document.getElementById('entrySearch').addEventListener('input', (ev)=>{
-    renderEntries(ev.target.value);
-  });
-  document.getElementById('dictSearch').addEventListener('input', (ev)=>{
-    renderDictionary(ev.target.value);
-  });
-  document.getElementById('overlay').addEventListener('click', (ev)=>{
-    if(ev.target.id==='overlay') closeModal();
-  });
-  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-  document.getElementById('convCategory').addEventListener('change', populateUnitSelects);
-  document.getElementById('convFrom').addEventListener('change', runConversion);
-  document.getElementById('convTo').addEventListener('change', runConversion);
-  document.getElementById('convInput').addEventListener('input', runConversion);
-}
-
-renderCategories();
-renderEntries();
-renderDictionary();
-renderChips();
-populateConverter();
-initEvents();
-
-</script>
-</body>
-</html>
+/* ---- Site Inspection Assistant ---- */
+function renderInspections(){
+  const wrap = document.getElementById('inspectionList');
+  wrap.innerHTML = '';
+  INSPECTIONS.forEach(i=>{
+    const card = document.createElement('div');
+    card.className = 'panel inspection-card';
+    card.innerHTML = `
+      <h3>${i.area}</h3>
+      <p class="insp-row"><b>Yoxlama nöqtələri:</b> ${i.points.join(' · ')}</p>
+      <p class="insp-row insp-defect"><b>Tipik qüsurlar:</b> ${i.defects.join(' · ')}</p>
+      <p class="insp-row insp-accept"><b>Qəbul meyarı:</b> ${i.acceptance}</p>
+    `;
+    wr
